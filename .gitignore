@@ -42,5 +42,4 @@ frontend/dist/
 *.swo
 
 # ML Checkpoints and Large Files
-backend/satquery_checkpoints/
 *.zip
