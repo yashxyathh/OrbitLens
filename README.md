@@ -82,12 +82,6 @@ cd backend
 # Install Python requirements
 pip install -r requirements.txt
 
-# (Optional) Set your Anthropic API Key in environment or .env
-# Windows PowerShell:
-$env:ANTHROPIC_API_KEY="your_api_key_here"
-
-# Linux / macOS:
-export ANTHROPIC_API_KEY="your_api_key_here"
 
 # Launch FastAPI Server (uses python -m uvicorn for universal Windows/macOS/Linux compatibility)
 python -m uvicorn main:app --reload --port 8000
