@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowUpRight, Loader2, Send, Trash2 } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Loader2, Network, Send, Trash2 } from 'lucide-react';
 import ResponseCard from './ResponseCard';
 
 export default function ChatWindow({
@@ -11,12 +11,21 @@ export default function ChatWindow({
   onClearHistory,
   imagesCount,
   suggestedQueries = [],
+  effort,
+  setEffort,
+  onOpenPipeline,
 }) {
-  const messagesEndRef = useRef(null);
+  const resultsRef = useRef(null);
 
   useEffect(() => {
-    if (history.length) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (history.length && resultsRef.current) {
+      resultsRef.current.scrollTo({ top: resultsRef.current.scrollHeight, behavior: 'smooth' });
+    }
   }, [history, isLoading]);
+
+  const focusAnalysisLog = () => {
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -63,11 +72,21 @@ export default function ChatWindow({
             aria-label="Satellite imagery question"
           />
           <div className="query-actions">
-            {history.length > 0 && (
-              <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
-                <Trash2 size={14} />
-              </button>
-            )}
+            <button type="button" className="tool-button" onClick={onOpenPipeline}>
+              <Network size={13} /> Pipeline
+            </button>
+            <button type="button" className="tool-button" onClick={focusAnalysisLog} disabled={!history.length}>
+              <span className="tool-button-count">{history.length || '—'}</span> Analysis log
+            </button>
+            <label className="effort-control">
+              <span>Effort</span>
+              <select value={effort} onChange={(event) => setEffort(event.target.value)} disabled={isLoading}>
+                <option value="min">Min</option>
+                <option value="medium">Medium</option>
+                <option value="max">Max</option>
+              </select>
+              <ChevronDown size={12} />
+            </label>
             <button type="submit" className="primary-button" disabled={isLoading || !query.trim() || !imagesCount}>
               {isLoading ? <><Loader2 size={14} className="loading-orbit" /> Analyzing</> : <>Run analysis <Send size={13} /></>}
             </button>
@@ -90,15 +109,19 @@ export default function ChatWindow({
       )}
 
       {history.length > 0 && (
-        <section className="results" aria-live="polite">
+        <section className="results" aria-live="polite" ref={resultsRef}>
           <div className="results-heading">
             <h3>Analysis log</h3>
-            <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
+            <div className="results-heading-actions">
+              <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
+              <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
+                <Trash2 size={13} />
+              </button>
+            </div>
           </div>
           {history.map((item, index) => (
             <ResponseCard key={`${item.query}-${index}`} responseData={item.response} queryText={item.query} imagePreviews={item.imagePreviews} />
           ))}
-          <div ref={messagesEndRef} />
         </section>
       )}
     </div>

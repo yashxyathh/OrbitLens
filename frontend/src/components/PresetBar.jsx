@@ -24,7 +24,6 @@ export default function PresetBar({ presets, activePresetId, onSelectPreset }) {
               <span className="preset-count">{preset.image_names?.length || 0} {preset.image_names?.length === 1 ? 'image' : 'images'}</span>
             </div>
             <h4>{title}</h4>
-            <p>{preset.description}</p>
             <ArrowUpRight className="preset-arrow" size={16} />
           </button>
         );

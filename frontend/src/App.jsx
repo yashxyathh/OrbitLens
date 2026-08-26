@@ -4,7 +4,7 @@ import PresetBar from './components/PresetBar';
 import ImageUpload from './components/ImageUpload';
 import ChatWindow from './components/ChatWindow';
 import ArchitectureModal from './components/ArchitectureModal';
-import { AlertCircle, ArrowUpRight, CheckCircle2, Orbit, X } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 
 const FALLBACK_PRESETS = [
   {
@@ -54,13 +54,6 @@ const FALLBACK_PRESETS = [
   },
 ];
 
-const pipeline = [
-  ['01', 'Ingest', 'Image + intent'],
-  ['02', 'Route', 'Specialist task'],
-  ['03', 'Infer', 'Vision analysis'],
-  ['04', 'Explain', 'Evidence + trace'],
-];
-
 export default function App() {
   const [images, setImages] = useState([]);
   const [query, setQuery] = useState('');
@@ -71,6 +64,7 @@ export default function App() {
   const [activePresetId, setActivePresetId] = useState(null);
   const [backendHealth, setBackendHealth] = useState(null);
   const [isArchitectureOpen, setIsArchitectureOpen] = useState(false);
+  const [effort, setEffort] = useState('medium');
 
   useEffect(() => {
     checkHealth();
@@ -130,7 +124,7 @@ export default function App() {
     setActivePresetId(null);
   };
 
-  const handleSubmitQuery = async () => {
+  const handleSubmitQuery = async (selectedEffort = effort) => {
     if (!images.length) {
       setError('Add at least one satellite image before running an inquiry.');
       return;
@@ -146,6 +140,7 @@ export default function App() {
     try {
       const formData = new FormData();
       formData.append('query', query.trim());
+      formData.append('effort', selectedEffort);
 
       for (let index = 0; index < images.length; index += 1) {
         const image = images[index];
@@ -213,29 +208,19 @@ export default function App() {
       />
 
       <main className="app-main">
-        <section className="intro-grid">
-          <div className="intro-copy">
-            <div className="eyebrow"><span className="eyebrow-mark" /> Remote sensing intelligence</div>
-            <h2>Turn satellite scenes into <em>clear decisions.</em></h2>
-            <p>
-              Ask natural language questions across optical, SAR, and bi-temporal imagery.
-              SatQuery routes every inquiry to the right specialist and shows its work.
-            </p>
-          </div>
-          <div className="intro-note">
-            <Orbit className="intro-orbit" size={18} />
-            <span>Built for earth observation teams</span>
-            <strong>One question. Every signal.</strong>
-          </div>
+        <section className="greeting-shell">
+          <div className="greeting-mark" aria-hidden="true">✳</div>
+          <h2>Good afternoon, Yashasvi Yatharth.</h2>
+          <p>What are we looking at today?</p>
         </section>
 
         <section className="preset-section" aria-labelledby="presets-heading">
           <div className="section-heading">
             <div>
-              <span className="section-kicker">Start with a signal</span>
+              <span className="section-kicker">Begin with a scene</span>
               <h3 id="presets-heading">Field presets</h3>
             </div>
-            <span className="section-meta">Five ready-to-run investigations</span>
+            <span className="section-meta">Select a preset to open the workspace</span>
           </div>
           <PresetBar
             presets={presets}
@@ -259,12 +244,14 @@ export default function App() {
 
         <section className="workspace-grid" aria-label="Satellite analysis workspace">
           <div className="workspace-primary">
-            <ImageUpload
-              images={images}
-              onImagesChange={setImages}
-              onRemoveImage={handleRemoveImage}
-              disabled={isLoading}
-            />
+            {activePresetId && (
+              <ImageUpload
+                images={images}
+                onImagesChange={setImages}
+                onRemoveImage={handleRemoveImage}
+                disabled={isLoading}
+              />
+            )}
             <ChatWindow
               history={history}
               query={query}
@@ -274,53 +261,16 @@ export default function App() {
               onClearHistory={() => setHistory([])}
               imagesCount={images.length}
               suggestedQueries={getSuggestedQueries()}
+              effort={effort}
+              setEffort={setEffort}
+              onOpenPipeline={() => setIsArchitectureOpen(true)}
             />
           </div>
-
-          <aside className="workspace-aside">
-            <div className="aside-card aside-status">
-              <div className="aside-card-heading">
-                <span className="section-kicker">Live system</span>
-                <span className={`status-dot ${isHealthy ? 'is-on' : ''}`} />
-              </div>
-              <strong>{isHealthy ? 'Ready for analysis' : 'Connecting to engine'}</strong>
-              <p>{isHealthy ? 'Your workspace is connected to the SatQuery backend.' : 'Start the backend service to enable live analysis.'}</p>
-              <div className="status-line">
-                <span>Model</span>
-                <span title={backendHealth?.active_model}>{backendHealth?.active_model || 'Waiting…'}</span>
-              </div>
-            </div>
-
-            <div className="aside-card">
-              <div className="aside-card-heading">
-                <span className="section-kicker">The pipeline</span>
-                <CheckCircle2 size={16} className="aside-check" />
-              </div>
-              <div className="pipeline-list">
-                {pipeline.map(([number, title, detail]) => (
-                  <div className="pipeline-step" key={number}>
-                    <span className="pipeline-number">{number}</span>
-                    <div><strong>{title}</strong><span>{detail}</span></div>
-                    <ArrowUpRight size={14} />
-                  </div>
-                ))}
-              </div>
-              <button type="button" className="text-button" onClick={() => setIsArchitectureOpen(true)}>
-                View the full architecture <ArrowUpRight size={14} />
-              </button>
-            </div>
-
-            <div className="aside-quote">
-              <span>“</span>
-              <p>Good intelligence makes the complex feel legible.</p>
-              <small>SatQuery field note / 01</small>
-            </div>
-          </aside>
         </section>
       </main>
 
       <footer className="app-footer">
-        <span><span className="footer-mark" /> SatQuery AI</span>
+        <span><span className="footer-mark" /> OrbitLens</span>
         <span>Agentic vision-language analysis for earth observation</span>
         <span>SIH 2026 / ISRO</span>
       </footer>
