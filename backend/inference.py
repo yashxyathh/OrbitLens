@@ -27,7 +27,8 @@ logger = logging.getLogger("SatQuery-Inference")
 # Configuration & Global Cache (Singleton Pattern)
 # ============================================================================
 BASE_MODEL_ID = os.environ.get("SATQUERY_BASE_MODEL", "Qwen/Qwen2-VL-2B-Instruct")
-ADAPTER_PATH = os.environ.get("SATQUERY_ADAPTER_PATH", "./satquery_checkpoints/final_adapter")
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ADAPTER_PATH = os.environ.get("SATQUERY_ADAPTER_PATH", os.path.join(_CURRENT_DIR, "satquery_checkpoints", "final_adapter"))
 
 # Global in-memory cache to prevent reloading the model on every API request
 _CACHED_MODEL: Optional[Any] = None
