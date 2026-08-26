@@ -1,0 +1,1 @@
+- [Package setup scope](package-setup-scope.md) — language package setup can create root project scaffolding; keep imported project layout and remove unrelated generated files.
