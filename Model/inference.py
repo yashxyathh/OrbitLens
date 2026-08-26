@@ -33,43 +33,12 @@ ADAPTER_PATH = os.environ.get("SATQUERY_ADAPTER_PATH", "./satquery_checkpoints/f
 _CACHED_MODEL: Optional[Any] = None
 _CACHED_PROCESSOR: Optional[Any] = None
 
-# Task-Specific Prompt Templates (Forcing Structured Output)
+# Task-Specific Prompt Templates
 TASK_PROMPTS = {
-    "vqa": (
-        "Analyze this satellite image and answer the user's inquiry precisely: {query}\n"
-        "Structure your answer with clear bullet points (e.g., Counts, Identifiers, Spatial Layout)."
-    ),
-    "captioning": (
-        "Provide a detailed remote sensing description of this satellite scene.\n"
-        "Structure your response strictly under these headers:\n"
-        "1. **Primary Scene Taxonomy**\n"
-        "2. **Dominant Land Cover & Land Use (LULC)**\n"
-        "3. **Prominent Infrastructure & Terrain Features**\n"
-        "4. **Executive Summary**"
-    ),
-    "grounding": (
-        "Locate all instances of '{query}' in this satellite image.\n"
-        "Structure your response with:\n"
-        "1. **Target Identification**\n"
-        "2. **Spatial Localization** (specify quadrant and bounding boxes)\n"
-        "3. **Contextual Landmarks**\n"
-        "4. **Visual Verification Cues**"
-    ),
-    "change_detection": (
-        "Compare the two bi-temporal satellite images (Image 1 captured at Time 1, and Image 2 captured at Time 2). Describe all changes regarding: {query}\n"
-        "Structure your response strictly under:\n"
-        "1. **Overview of Temporal Shifts**\n"
-        "2. **Key Zones of Alteration**\n"
-        "3. **Impact & Severity Assessment**\n"
-        "4. **Actionable Intelligence / Recommendations**"
-    ),
-    "optical_sar_fusion": (
-        "Analyze the complementary multi-modal satellite image pair (Optical and SAR): {query}\n"
-        "Synthesize both sensor modalities to deliver fused insights under:\n"
-        "1. **Cross-Modal Sensor Alignment**\n"
-        "2. **Radar Texture & Moisture Analysis**\n"
-        "3. **Fused Intelligence Synthesis**"
-    )
+    "vqa": "Analyze this satellite image and answer the following question precisely: {query}",
+    "captioning": "Provide a detailed remote sensing description of this satellite scene, including terrain type, land cover, structures, and notable geographic features.",
+    "grounding": "Locate all instances of '{query}' in this satellite image. Output normalized bounding boxes in [ymin, xmin, ymax, xmax] format with class labels.",
+    "change_detection": "Compare the two bi-temporal satellite images (Image 1 captured at Time 1, and Image 2 captured at Time 2). Describe all structural, land-use, environmental, or infrastructural changes: {query}"
 }
 
 
@@ -83,10 +52,7 @@ def get_or_load_model() -> Tuple[Any, Any]:
     if _CACHED_MODEL is not None and _CACHED_PROCESSOR is not None:
         return _CACHED_MODEL, _CACHED_PROCESSOR
 
-    print("\n" + "="*50)
-    print("🚀 Initializing SatQuery Specialist Vision-Language Model...")
-    print("⏳ Please wait! This may take 3-5 minutes to download weights on first run...")
-    print("="*50 + "\n")
+    logger.info("Initializing SatQuery Specialist Vision-Language Model...")
 
     from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
     from peft import PeftModel
@@ -96,15 +62,14 @@ def get_or_load_model() -> Tuple[Any, Any]:
         device = "cuda"
         dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
         device_map = "auto"
-        print(f"✅ GPU Detected: {torch.cuda.get_device_name(0)} | Using Precision: {dtype}")
+        logger.info(f"GPU Detected: {torch.cuda.get_device_name(0)} | Using Precision: {dtype}")
     else:
         device = "cpu"
         dtype = torch.float32
         device_map = None
-        print("⚠️ No CUDA GPU detected. Falling back gracefully to CPU (float32).")
+        logger.info("No CUDA GPU detected. Falling back gracefully to CPU (float32).")
 
     # 2. Load Processor with optimized resolution limits
-    print("📥 Loading Processor from HuggingFace...")
     processor = AutoProcessor.from_pretrained(
         BASE_MODEL_ID,
         min_pixels=128 * 28 * 28,
@@ -112,7 +77,6 @@ def get_or_load_model() -> Tuple[Any, Any]:
     )
 
     # 3. Load Base Model
-    print(f"📥 Downloading/Loading Base Model '{BASE_MODEL_ID}' (This is ~5GB, please wait)...")
     base_model = Qwen2VLForConditionalGeneration.from_pretrained(
         BASE_MODEL_ID,
         torch_dtype=dtype,
@@ -122,10 +86,10 @@ def get_or_load_model() -> Tuple[Any, Any]:
 
     # 4. Attach Trained LoRA Adapter (if directory exists)
     if os.path.exists(ADAPTER_PATH):
-        print(f"🔗 Attaching fine-tuned Remote Sensing LoRA adapter from: {ADAPTER_PATH}")
+        logger.info(f"Attaching fine-tuned Remote Sensing LoRA adapter from: {ADAPTER_PATH}")
         model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
     else:
-        print(f"⚠️ Adapter not found at '{ADAPTER_PATH}'. Running base model '{BASE_MODEL_ID}'.")
+        logger.warning(f"Adapter not found at '{ADAPTER_PATH}'. Running base model '{BASE_MODEL_ID}'.")
         model = base_model
 
     if device == "cpu":
@@ -135,7 +99,7 @@ def get_or_load_model() -> Tuple[Any, Any]:
 
     _CACHED_MODEL = model
     _CACHED_PROCESSOR = processor
-    print("\n✅ SatQuery Model is warm, cached in memory, and ready for inference!\n")
+    logger.info("SatQuery Model is warm, cached in memory, and ready for inference.")
     return _CACHED_MODEL, _CACHED_PROCESSOR
 
 
@@ -174,25 +138,20 @@ def run_specialist_model(images: list, query: str, task_type: str) -> tuple[str,
             except Exception as e:
                 return f"[Error] Failed to parse input image: {e}", 0.0
 
-    # 2. Format System Prompt
-    system_instruction = TASK_PROMPTS.get(task_key, "You are a remote sensing AI.")
-    if "{query}" in system_instruction:
-        system_instruction = system_instruction.format(query=query if query else "")
+    # 2. Format Task-Specific Instruction Prompt
+    template = TASK_PROMPTS.get(task_key, "{query}")
+    if "{query}" in template:
+        formatted_prompt = template.format(query=query if query else "")
+    else:
+        formatted_prompt = f"{template}\nUser Query: {query}" if query else template
 
     # 3. Build Multi-Modal Conversation Payload
     user_content = []
     for img in pil_images:
         user_content.append({"type": "image", "image": img})
-    
-    # Just pass the task instruction or query to the user role
-    user_instruction = f"User Query: {query}" if query and "{query}" not in TASK_PROMPTS.get(task_key, "") else "Please analyze the imagery according to your system instructions."
-    user_content.append({"type": "text", "text": user_instruction})
+    user_content.append({"type": "text", "text": formatted_prompt})
 
-    # Separate strict formatting instructions into the system role
-    conversation = [
-        {"role": "system", "content": system_instruction},
-        {"role": "user", "content": user_content}
-    ]
+    conversation = [{"role": "user", "content": user_content}]
 
     try:
         # 4. Retrieve Cached Model & Processor
@@ -215,9 +174,8 @@ def run_specialist_model(images: list, query: str, task_type: str) -> tuple[str,
         with torch.inference_mode():
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=1024,
-                do_sample=True,
-                temperature=0.2,
+                max_new_tokens=256,
+                do_sample=False,
                 output_scores=True,
                 return_dict_in_generate=True,
                 pad_token_id=processor.tokenizer.pad_token_id,

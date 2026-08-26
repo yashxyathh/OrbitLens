@@ -1,188 +1,129 @@
-import React, { useRef, useEffect } from 'react';
-import { Send, Sparkles, Loader2, MessageSquare, Trash2, ArrowUpRight } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { ArrowUpRight, ChevronDown, Loader2, Network, Send, Trash2 } from 'lucide-react';
 import ResponseCard from './ResponseCard';
 
 export default function ChatWindow({
   history,
   query,
   setQuery,
-  effort,
-  setEffort,
   onSubmit,
   isLoading,
   onClearHistory,
   imagesCount,
-  suggestedQueries = []
+  suggestedQueries = [],
+  effort,
+  setEffort,
+  onOpenPipeline,
 }) {
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
+  const resultsRef = useRef(null);
 
-  // Auto-scroll to latest response
   useEffect(() => {
-    if (history.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (history.length && resultsRef.current) {
+      resultsRef.current.scrollTo({ top: resultsRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [history, isLoading]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (!isLoading && query.trim() && imagesCount > 0) {
-        onSubmit();
-      }
+  const focusAnalysisLog = () => {
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (!isLoading && query.trim() && imagesCount) onSubmit();
     }
   };
 
   return (
-    <div className="flex flex-col space-y-4">
-      
-      {/* Response History Stream */}
-      {history.length > 0 && (
-        <div className="space-y-6">
-          {history.map((item, idx) => (
-            <ResponseCard
-              key={idx}
-              responseData={item.response}
-              queryText={item.query}
-              imagePreviews={item.imagePreviews}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      )}
-
-      {/* Loading Indicator Card */}
-      {isLoading && (
-        <div className="bg-slate-900/80 border border-cyan-500/30 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center space-y-3 animate-pulse">
-          <div className="relative flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-            <div className="absolute inset-0 rounded-full border border-cyan-400 animate-ping opacity-30" />
-          </div>
+    <div>
+      <section className="composer">
+        <div className="composer-heading">
           <div>
-            <h4 className="text-sm font-semibold text-slate-200">
-              Agentic Pipeline Processing
-            </h4>
-            <p className="text-xs text-cyan-400/80 font-mono mt-0.5">
-              Validating tensors • Routing specialist task • Querying Vision-LLM...
-            </p>
+            <span className="section-kicker">02 / Ask the scene</span>
+            <h3>What do you want to know?</h3>
           </div>
+          <span className="composer-label">{imagesCount ? `${imagesCount} tensor${imagesCount > 1 ? 's' : ''} ready` : 'Awaiting input'}</span>
         </div>
-      )}
 
-      {/* Query Input Box Card */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
-        
-        {/* Suggested Queries Chips */}
         {suggestedQueries.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Recommended Remote Sensing Inquiries:</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {suggestedQueries.map((sug, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setQuery(sug)}
-                  disabled={isLoading}
-                  className="text-left text-xs bg-slate-950/70 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/40 rounded-lg px-2.5 py-1.5 transition-all flex items-center gap-1 group"
-                >
-                  <span className="line-clamp-1">{sug}</span>
-                  <ArrowUpRight className="w-3 h-3 text-slate-500 group-hover:text-cyan-400 flex-shrink-0" />
+          <div className="suggested-wrap">
+            <span className="suggested-label">Try a focused inquiry</span>
+            <div className="suggestions">
+              {suggestedQueries.map((suggestion) => (
+                <button type="button" className="suggestion" key={suggestion} onClick={() => setQuery(suggestion)} disabled={isLoading}>
+                  {suggestion} <ArrowUpRight size={12} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Input Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!isLoading && query.trim() && imagesCount > 0) {
-              onSubmit();
-            }
-          }}
-          className="relative"
-        >
+        <form className="query-form" onSubmit={(event) => { event.preventDefault(); if (!isLoading && query.trim() && imagesCount) onSubmit(); }}>
           <textarea
-            ref={textareaRef}
-            rows={3}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              imagesCount === 0
-                ? "First upload 1 or 2 satellite images above (or click a Preset)..."
-                : imagesCount === 2
-                ? "Ask about bi-temporal differences (floods/damage) or Optical+SAR fusion..."
-                : "Ask about objects, counts, spatial location (grounding), or scene description..."
-            }
-            disabled={isLoading || imagesCount === 0}
-            className="w-full bg-slate-950/80 border border-slate-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 rounded-xl p-3 pr-24 text-sm text-slate-100 placeholder-slate-500 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed font-sans leading-relaxed"
+            className="query-input"
+            rows={4}
+            disabled={isLoading || !imagesCount}
+            placeholder={imagesCount
+              ? 'Ask about change, location, objects, land cover, or sensor signals…'
+              : 'Load one or two satellite images above to begin…'}
+            aria-label="Satellite imagery question"
           />
-
-          {/* Action Buttons in Bottom Right of Textarea */}
-          <div className="absolute right-2.5 bottom-3 flex items-center gap-2">
-            
-            {/* Effort Control Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-700/80 rounded-lg px-2 py-1.5">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Effort:</span>
-              <select
-                value={effort}
-                onChange={(e) => setEffort(e.target.value)}
-                disabled={isLoading}
-                className="bg-transparent text-xs text-slate-200 font-medium focus:outline-none focus:ring-0 border-none p-0 cursor-pointer disabled:opacity-50"
-              >
-                <option value="min" className="bg-slate-800 text-slate-200">Min</option>
-                <option value="medium" className="bg-slate-800 text-slate-200">Medium</option>
-                <option value="max" className="bg-slate-800 text-slate-200">Max</option>
+          <div className="query-actions">
+            <button type="button" className="tool-button" onClick={onOpenPipeline}>
+              <Network size={13} /> Pipeline
+            </button>
+            <button type="button" className="tool-button" onClick={focusAnalysisLog} disabled={!history.length}>
+              <span className="tool-button-count">{history.length || '—'}</span> Analysis log
+            </button>
+            <label className="effort-control">
+              <span>Effort</span>
+              <select value={effort} onChange={(event) => setEffort(event.target.value)} disabled={isLoading}>
+                <option value="min">Min</option>
+                <option value="medium">Medium</option>
+                <option value="max">Max</option>
               </select>
-            </div>
-
-            {history.length > 0 && (
-              <button
-                type="button"
-                onClick={onClearHistory}
-                disabled={isLoading}
-                className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-rose-400 border border-slate-700 transition-colors disabled:opacity-50"
-                title="Clear conversation history"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading || !query.trim() || imagesCount === 0}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-medium text-xs shadow-lg shadow-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Analyzing</span>
-                </>
-              ) : (
-                <>
-                  <span>Execute</span>
-                  <Send className="w-3.5 h-3.5" />
-                </>
-              )}
+              <ChevronDown size={12} />
+            </label>
+            <button type="submit" className="primary-button" disabled={isLoading || !query.trim() || !imagesCount}>
+              {isLoading ? <><Loader2 size={14} className="loading-orbit" /> Analyzing</> : <>Run analysis <Send size={13} /></>}
             </button>
           </div>
         </form>
-
-        {/* Helper Footer */}
-        <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-400">
-          <span>Press <kbd className="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">Enter</kbd> to submit, <kbd className="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">Shift+Enter</kbd> for newline</span>
-          {imagesCount === 0 && (
-            <span className="text-amber-400/90 font-medium">⚠️ Satellite image required before executing query</span>
-          )}
+        <div className="composer-helper">
+          <span><kbd>Enter</kbd> to run · <kbd>Shift + Enter</kbd> for a new line</span>
+          {!imagesCount && <span className="helper-warning">Image input required</span>}
         </div>
+      </section>
 
-      </div>
+      {isLoading && (
+        <div className="loading-card">
+          <Loader2 size={22} className="loading-orbit" />
+          <div>
+            <strong>Reading the scene</strong>
+            <p>Validating tensors · routing specialist · assembling evidence</p>
+          </div>
+        </div>
+      )}
 
+      {history.length > 0 && (
+        <section className="results" aria-live="polite" ref={resultsRef}>
+          <div className="results-heading">
+            <h3>Analysis log</h3>
+            <div className="results-heading-actions">
+              <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
+              <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+          {history.map((item, index) => (
+            <ResponseCard key={`${item.query}-${index}`} responseData={item.response} queryText={item.query} imagePreviews={item.imagePreviews} />
+          ))}
+        </section>
+      )}
     </div>
   );
 }

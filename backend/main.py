@@ -119,7 +119,6 @@ async def get_sample_presets():
 @app.post("/api/query", response_model=QueryResponse)
 async def query_satellite_imagery(
     query: str = Form(..., description="The user's natural language question or remote sensing task instruction"),
-    effort: str = Form("medium", description="Effort level for the AI response (min, medium, max)"),
     images: List[UploadFile] = File(..., description="1 or 2 satellite imagery files in PNG, JPG, or WebP format")
 ):
     """
@@ -197,7 +196,7 @@ async def query_satellite_imagery(
     ))
 
     # 6. Specialist Model Execution
-    answer_text, model_confidence, model_invoked = analyze_imagery(pil_images, clean_query, task_type, effort)
+    answer_text, model_confidence, model_invoked = analyze_imagery(pil_images, clean_query, task_type)
 
     steps.append(TraceStep(
         stage="Specialist Model Inference",
