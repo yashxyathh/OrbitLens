@@ -140,7 +140,7 @@ def get_or_load_model() -> Tuple[Any, Any]:
     return _CACHED_MODEL, _CACHED_PROCESSOR
 
 
-def run_specialist_model(images: list, query: str, task_type: str) -> tuple[str, float]:
+def run_specialist_model(images: list, query: str, task_type: str, effort: str = "medium") -> tuple[str, float]:
     """
     Production inference function for FastAPI backend integration.
 
@@ -175,10 +175,22 @@ def run_specialist_model(images: list, query: str, task_type: str) -> tuple[str,
             except Exception as e:
                 return f"[Error] Failed to parse input image: {e}", 0.0
 
-    # 2. Format System Prompt
+    # 2. Format System Prompt based on Effort
     system_instruction = TASK_PROMPTS.get(task_key, "You are a remote sensing AI.")
     if "{query}" in system_instruction:
         system_instruction = system_instruction.format(query=query if query else "")
+
+    if effort == "min":
+        system_instruction += "\nProvide a very brief, single-sentence summary."
+        max_tokens = 128
+        temp = 0.1
+    elif effort == "max":
+        system_instruction += "\nProvide an extremely detailed, exhaustive analysis. Ensure all Markdown headers are fully populated with extensive details and insights."
+        max_tokens = 1024
+        temp = 0.4
+    else: # medium
+        max_tokens = 512
+        temp = 0.2
 
     # 3. Build Multi-Modal Conversation Payload
     user_content = []
@@ -216,9 +228,9 @@ def run_specialist_model(images: list, query: str, task_type: str) -> tuple[str,
         with torch.inference_mode():
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=1024,
+                max_new_tokens=max_tokens,
                 do_sample=True,
-                temperature=0.2,
+                temperature=temp,
                 output_scores=True,
                 return_dict_in_generate=True,
                 pad_token_id=processor.tokenizer.pad_token_id,

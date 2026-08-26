@@ -6,6 +6,8 @@ export default function ChatWindow({
   history,
   query,
   setQuery,
+  effort,
+  setEffort,
   onSubmit,
   isLoading,
   onClearHistory,
@@ -123,6 +125,22 @@ export default function ChatWindow({
 
           {/* Action Buttons in Bottom Right of Textarea */}
           <div className="absolute right-2.5 bottom-3 flex items-center gap-2">
+            
+            {/* Effort Control Dropdown */}
+            <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-700/80 rounded-lg px-2 py-1.5">
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Effort:</span>
+              <select
+                value={effort}
+                onChange={(e) => setEffort(e.target.value)}
+                disabled={isLoading}
+                className="bg-transparent text-xs text-slate-200 font-medium focus:outline-none focus:ring-0 border-none p-0 cursor-pointer disabled:opacity-50"
+              >
+                <option value="min" className="bg-slate-800 text-slate-200">Min</option>
+                <option value="medium" className="bg-slate-800 text-slate-200">Medium</option>
+                <option value="max" className="bg-slate-800 text-slate-200">Max</option>
+              </select>
+            </div>
+
             {history.length > 0 && (
               <button
                 type="button"

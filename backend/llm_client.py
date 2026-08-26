@@ -19,7 +19,8 @@ logger = logging.getLogger("SatQuery-Execution")
 def analyze_imagery(
     images: List[Image.Image], 
     query: str, 
-    task_type: str
+    task_type: str,
+    effort: str = "medium"
 ) -> Tuple[str, float, str]:
     """
     Executes the local fine-tuned specialist vision model on the input satellite imagery.
@@ -32,8 +33,8 @@ def analyze_imagery(
     """
     try:
         # Run local inference
-        answer_text, confidence_score = run_specialist_model(images, query, task_type)
-        model_invoked = "SatQuery Specialist (Qwen2-VL-2B + LoRA)"
+        answer_text, confidence_score = run_specialist_model(images, query, task_type, effort)
+        model_invoked = f"SatQuery Specialist (Qwen2-VL-2B + LoRA) [{effort.upper()}]"
         
         return answer_text, confidence_score, model_invoked
         

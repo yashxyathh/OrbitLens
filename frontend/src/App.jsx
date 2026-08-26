@@ -57,6 +57,7 @@ const FALLBACK_PRESETS = [
 export default function App() {
   const [images, setImages] = useState([]);
   const [query, setQuery] = useState('');
+  const [effort, setEffort] = useState('medium');
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -156,6 +157,7 @@ export default function App() {
     try {
       const formData = new FormData();
       formData.append('query', query.trim());
+      formData.append('effort', effort);
 
       for (let i = 0; i < images.length; i++) {
         const imgObj = images[i];
@@ -281,6 +283,8 @@ export default function App() {
             history={history}
             query={query}
             setQuery={setQuery}
+            effort={effort}
+            setEffort={setEffort}
             onSubmit={handleSubmitQuery}
             isLoading={isLoading}
             onClearHistory={() => setHistory([])}
