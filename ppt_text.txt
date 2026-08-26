@@ -1,0 +1,162 @@
+
+--- ppt/slides/slide1.xml ---
+Coding Syndicate
+SMART INDIA HACKATHON 2026
+Problem Statement ID –
+26167
+Problem Statement Title-
+SatQuery
+ AI - An Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis through Text Queries
+Theme- 
+Space Technology
+PS Category- 
+Software
+
+--- ppt/slides/slide2.xml ---
+OrbitLens
+Proposed Solution
+2
+Coding Syndicate
+Solution: an agentic vision-language assistant that answers natural-language queries on single, cross-modal (optical + SAR), and multitemporal remote-sensing images. A controller checks the inputs and routes each query to the right specialist model (VQA, captioning, grounding, change detection, optical-SAR fusion) and returns an evidence-grounded answer.
+How it addresses the problem: removes the need for users to understand GIS workflows, sensor characteristics, or model selection, and fuses optical/SAR and multi-date imagery so answers aren't limited by cloud cover or a single acquisition date.
+Innovation & uniqueness: agentic, query-driven orchestration (not one monolithic VLM), remote-sensing domain adaptation via 
+BigEarthNet
+ fine-tuning, and auditable, evidence-grounded outputs with confidence scores and an execution trace.
+
+--- ppt/slides/slide3.xml ---
+TECHNICAL APPROACH
+3
+Coding Syndicate
+Technologies to be used (e.g. programming languages, frameworks, hardware)
+Python, PyTorch, HuggingFace Transformers model training & inference
+Remote-sensing VLM backbone fine-tuned on 
+BigEarthNet
+ (Sentinel-1 SAR + Sentinel-2 MSI + text)
+Specialist models: VQA/captioning, grounding, change-VQA, optical-SAR fusion
+FastAPI
+ backend + React/Streamlit web GUI; GDAL/Rasterio for GeoTIFF/TIFF handling
+Methodology and process for implementation (Flow Charts/Images/ working prototype)
+Query +
+Image(s)
+▶
+Input &
+Compatibility Check
+▶
+Agentic
+Task Routing
+▶
+Specialist Model
+Execution
+▶
+Evidence-grounded
+Response
+Model / Tool Registry
+• VQA Model
+• Captioning Model
+• Grounding Model
+• Change-VQA / Change Model
+• Optical–SAR Fusion Model
+“What objects are visible?”
+“Describe the scene”
+“Highlight the water body”
+“What changed between these dates?”
+Evidence Generation
+Relevant image region 
+Bounding box / mask 
+Change location 
+Support modality/date 
+Confidence score
+Single Image
+Optical/MSI 
+SAR 
+Cross-modal Pair
+Optical + SAR 
+Bi-temporal Pair
+Image T1 + Image T2
+Task-Specific Processing
+• Captioning → Textual answer
+• Grounding → Relevant region
+• Change-VQA → T1–T2 change
+• Optical–SAR → Cross-modal analysis
+• Generate textual + spatial outputs
+
+--- ppt/slides/slide4.xml ---
+FEASIBILITY AND VIABILITY
+4
+Coding Syndicate
+TECHNICAL AND DATA FEASIBILITY
+Data availability:
+ 
+BigEarthNet
+ provides paired Sentinel-1 SAR, Sentinel-2 multispectral imagery and text for remote-sensing adaptation. 
+Benchmark coverage:
+ 
+VRSBench
+/RSVQA support single-image tasks, while CDVQA supports bi-temporal change understanding. 
+Modular architecture:
+ Specialist models can be independently developed, tested and integrated through the agentic controller. 
+POTENTIAL CHALLENGES & RISKS
+Domain shift:
+ Benchmark data may differ from ISRO/SAC Cartosat-2S optical and RISAT SAR imagery. 
+Input alignment:
+ Differences in resolution, acquisition conditions and co-registration can affect paired-image analysis. 
+Multi-model reliability:
+ Incorrect routing, conflicting outputs and latency can affect end-to-end performance. 
+RISK MITIGATION STRATEGY
+Domain adaptation:
+ Adapt the remote-sensing component using 
+BigEarthNet
+ and representative 
+multisensor
+ samples. 
+Automated validation:
+ Verify image count, modality, format, metadata and spatial compatibility before execution. 
+Reliable orchestration:
+ Confidence-based validation, fallback tools, asynchronous execution and caching.
+
+--- ppt/slides/slide5.xml ---
+IMPACT AND BENEFITS
+5
+Coding Syndicate
+Potential Impact on Target Audience
+Non-experts:
+ Ask questions about satellite imagery in natural language without requiring advanced GIS or remote-sensing expertise. 
+Government & disaster agencies:
+ Rapidly assess floods, damaged infrastructure, land-use changes and affected regions using optical, SAR and bi-temporal imagery. 
+Researchers & analysts:
+ Reduce manual image interpretation by combining specialist VLMs, change analysis and optical–SAR information through one interface.
+Benefits of the Solution
+ Disaster Management
+Faster identification and interpretation of affected regions 		
+•      
+Supports flood and infrastructure-change assessment 
+ Urban & Infrastructure Planning
+Monitor built-up expansion and infrastructure changes 			
+•      
+Compare imagery across time for development analyse 
+ Environmental Monitoring
+Forest, water-resource and land-cover monitoring 				
+•      
+Detect and interpret changes over time 
+ Operational Efficiency
+One natural-language interface for multiple remote-sensing tasks 
+Automates selection of task-specific AI models/tools 
+Evidence-grounded outputs improve interpretability 
+
+--- ppt/slides/slide6.xml ---
+RESEARCH  AND REFERENCES
+6
+Coding Syndicate
+Details / Links of the reference and research work
+BigEarthNet (Sentinel-1 SAR + Sentinel-2 MSI + text annotations) - primary fine-tuning dataset: https://arxiv.org/abs/2603.29630
+VRSBench & RSVQA - single-image captioning, grounding and visual-question-answering benchmarks
+CDVQA - multitemporal change-based visual-question-answering benchmark
+Remote-Sensing Vision-Language Models
+Remote-sensing VLMs for image–text understanding and VQA 
+Vision-language adaptation for multispectral and SAR imagery 
+Multimodal / Optical–SAR Research
+Optical–SAR fusion for complementary spectral and structural information 
+Cross-modal remote-sensing image understanding 
+Change Understanding
+Bi-temporal change detection and change-VQA 
+Text-based interpretation of detected changes

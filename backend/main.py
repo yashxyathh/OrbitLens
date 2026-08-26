@@ -17,11 +17,11 @@ import io
 try:
     from schemas import QueryResponse, HealthResponse, TraceInfo, TraceStep, SamplePreset
     from router import route_query
-    from llm_client import analyze_imagery, ANTHROPIC_MODEL, ANTHROPIC_API_KEY
+    from llm_client import analyze_imagery
 except ImportError:
     from backend.schemas import QueryResponse, HealthResponse, TraceInfo, TraceStep, SamplePreset
     from backend.router import route_query
-    from backend.llm_client import analyze_imagery, ANTHROPIC_MODEL, ANTHROPIC_API_KEY
+    from backend.llm_client import analyze_imagery
 
 app = FastAPI(
     title="SatQuery AI Backend",
@@ -100,7 +100,7 @@ SAMPLE_PRESETS = [
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():
     """Returns the operational status and active LLM configuration of the SatQuery AI engine."""
-    active_model = f"Anthropic {ANTHROPIC_MODEL}" if ANTHROPIC_API_KEY else "SatQuery AI Domain Engine (Demo Mode)"
+    active_model = "SatQuery Specialist (Qwen2-VL-2B + LoRA)"
     return HealthResponse(
         status="ok",
         service="SatQuery AI Backend Engine",
