@@ -180,16 +180,19 @@ def run_specialist_model(images: list, query: str, task_type: str, effort: str =
     if "{query}" in system_instruction:
         system_instruction = system_instruction.format(query=query if query else "")
 
+    min_tokens = 1
     if effort == "min":
         system_instruction += "\nProvide a very brief, single-sentence summary."
         max_tokens = 128
         temp = 0.1
     elif effort == "max":
-        system_instruction += "\nProvide an extremely detailed, exhaustive analysis. Ensure all Markdown headers are fully populated with extensive details and insights."
+        system_instruction += "\nYou MUST provide an extremely detailed, exhaustive analysis. Ensure all Markdown headers are fully populated with extensive details, sub-bullets, and insights."
         max_tokens = 1024
+        min_tokens = 200  # Force it to write at least 200 tokens
         temp = 0.4
     else: # medium
         max_tokens = 512
+        min_tokens = 50
         temp = 0.2
 
     # 3. Build Multi-Modal Conversation Payload
@@ -198,12 +201,13 @@ def run_specialist_model(images: list, query: str, task_type: str, effort: str =
         user_content.append({"type": "image", "image": img})
     
     # Just pass the task instruction or query to the user role
-    user_instruction = f"User Query: {query}" if query and "{query}" not in TASK_PROMPTS.get(task_key, "") else "Please analyze the imagery according to your system instructions."
-    user_content.append({"type": "text", "text": user_instruction})
+    user_instruction = f"User Query: {query}" if query and "{query}" not in TASK_PROMPTS.get(task_key, "") else "Please analyze the imagery."
+    
+    # Merge system instruction into the user prompt to guarantee the model pays attention to it
+    combined_prompt = f"INSTRUCTIONS:\n{system_instruction}\n\n{user_instruction}"
+    user_content.append({"type": "text", "text": combined_prompt})
 
-    # Separate strict formatting instructions into the system role
     conversation = [
-        {"role": "system", "content": system_instruction},
         {"role": "user", "content": user_content}
     ]
 
@@ -229,6 +233,7 @@ def run_specialist_model(images: list, query: str, task_type: str, effort: str =
             outputs = model.generate(
                 **inputs,
                 max_new_tokens=max_tokens,
+                min_new_tokens=min_tokens,
                 do_sample=True,
                 temperature=temp,
                 output_scores=True,
