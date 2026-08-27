@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronDown, Loader2, Network, Send, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { ArrowUpRight, ChevronDown, Loader2, Network, Send } from 'lucide-react';
 import ResponseCard from './ResponseCard';
 
 export default function ChatWindow({
@@ -8,7 +8,6 @@ export default function ChatWindow({
   setQuery,
   onSubmit,
   isLoading,
-  onClearHistory,
   imagesCount,
   suggestedQueries = [],
   effort,
@@ -16,18 +15,12 @@ export default function ChatWindow({
   onOpenPipeline,
 }) {
   const resultsRef = useRef(null);
-  const [showAnalysisLog, setShowAnalysisLog] = useState(false);
-  const latestItem = history[history.length - 1];
 
   useEffect(() => {
-    if (history.length && showAnalysisLog && resultsRef.current) {
+    if (history.length && resultsRef.current) {
       resultsRef.current.scrollTo({ top: resultsRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [history, isLoading, showAnalysisLog]);
-
-  const focusAnalysisLog = () => {
-    setShowAnalysisLog((isVisible) => !isVisible);
-  };
+  }, [history, isLoading]);
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -49,30 +42,16 @@ export default function ChatWindow({
           </div>
         )}
 
-        {latestItem && (
-          <section className="latest-answer" aria-live="polite" aria-label="Latest answer">
-            <ResponseCard
-              key={`${latestItem.query}-latest`}
-              responseData={latestItem.response}
-              answerOnly
-              animate
-            />
-          </section>
-        )}
-
-        {showAnalysisLog && history.length > 0 && (
-          <section className="results" id="analysis-log" aria-live="polite">
-            <div className="results-heading">
-              <h3>Analysis log</h3>
-              <div className="results-heading-actions">
-                <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
-                <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            </div>
+        {history.length > 0 && (
+          <section className="answer-thread" aria-live="polite" aria-label="Analysis answers">
             {history.map((item, index) => (
-              <ResponseCard key={`${item.query}-${index}`} responseData={item.response} queryText={item.query} imagePreviews={item.imagePreviews} />
+              <ResponseCard
+                key={`${item.query}-${index}`}
+                responseData={item.response}
+                queryText={item.query}
+                answerOnly
+                animate={index === history.length - 1}
+              />
             ))}
           </section>
         )}
@@ -116,16 +95,6 @@ export default function ChatWindow({
           <div className="query-actions">
             <button type="button" className="tool-button" onClick={onOpenPipeline}>
               <Network size={13} /> Pipeline
-            </button>
-            <button
-              type="button"
-              className={`tool-button ${showAnalysisLog ? 'is-active' : ''}`}
-              onClick={focusAnalysisLog}
-              disabled={!history.length}
-              aria-expanded={showAnalysisLog}
-              aria-controls="analysis-log"
-            >
-              <span className="tool-button-count">{history.length || '—'}</span> Analysis log
             </button>
             <label className="effort-control">
               <span>Effort</span>

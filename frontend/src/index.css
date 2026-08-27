@@ -230,10 +230,20 @@ button:disabled { cursor: not-allowed; }
 @keyframes thinking { 0%, 20% { width: 0; } 50% { width: 8px; } 80%, 100% { width: 18px; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.latest-answer { margin-top: 22px; }
+.answer-thread { margin-top: 22px; display: flex; flex-direction: column; gap: 16px; }
 .response-card-answer-only { border-radius: 22px; background: rgba(249,243,220,.68); border-color: rgba(0,0,0,.12); box-shadow: 0 8px 24px rgba(0,0,0,.05); }
-.response-card-answer-only .response-body { padding: 2px 0; }
+.response-card-answer-only .response-body { padding: 2px 0 0; }
 .response-card-answer-only .prose-sat { font-size: 14px; }
+.answer-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; padding: 9px 0 2px; border-top: 1px solid var(--line); }
+.analysis-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: 11px; border: 0; padding: 0; color: var(--muted); background: transparent; font-size: 10px; }
+.analysis-toggle > span { display: inline-flex; align-items: center; gap: 6px; color: var(--red); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+.analysis-toggle > span svg { transition: transform .2s ease; }
+.analysis-toggle small { color: var(--muted); font-size: 10px; text-transform: none; letter-spacing: 0; }
+.analysis-toggle:hover { color: var(--ink); }
+.is-analysis-open .analysis-toggle > span svg { transform: rotate(180deg); }
+.answer-analysis { margin-top: 11px; padding-top: 15px; border-top: 1px solid var(--line); }
+.answer-analysis .response-top { padding-bottom: 13px; }
+.answer-analysis .response-note { margin-top: 14px; }
 .typing-text { display: block; white-space: pre-wrap; line-height: 1.65; }
 .typing-caret { display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: var(--red); animation: blink-caret .8s steps(1) infinite; }
 @keyframes blink-caret { 50% { opacity: 0; } }

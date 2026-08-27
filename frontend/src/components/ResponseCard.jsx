@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Bot, Check, Copy, Gauge, ShieldCheck, User } from 'lucide-react';
+import { Bot, Check, ChevronDown, Copy, Gauge, ShieldCheck, User } from 'lucide-react';
 import TraceViewer from './TraceViewer';
 
 const taskLabels = {
@@ -53,6 +53,7 @@ function TypingAnswer({ answer, animate }) {
 
 export default function ResponseCard({ responseData, queryText, answerOnly = false, animate = false }) {
   const [copied, setCopied] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   if (!responseData) return null;
 
   const { answer, confidence, confidence_label: confidenceLabel, task_type: taskType, trace } = responseData;
@@ -70,12 +71,49 @@ export default function ResponseCard({ responseData, queryText, answerOnly = fal
 
   if (answerOnly) {
     return (
-      <article className="response-card response-card-answer-only">
+      <article className={`response-card response-card-answer-only ${isAnalysisOpen ? 'is-analysis-open' : ''}`}>
         <div className="response-body">
           <div className="prose-sat">
             <TypingAnswer answer={answer || ''} animate={animate} />
           </div>
         </div>
+        <div className="answer-actions">
+          <button
+            type="button"
+            className="analysis-toggle"
+            onClick={() => setIsAnalysisOpen((isOpen) => !isOpen)}
+            aria-expanded={isAnalysisOpen}
+          >
+            <span><ChevronDown size={14} /> Analysis log</span>
+            <small>{isAnalysisOpen ? 'Hide' : 'Show'}</small>
+          </button>
+          <button type="button" className="copy-button" onClick={handleCopy}>
+            {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+
+        {isAnalysisOpen && (
+          <div className="answer-analysis">
+            <div className="response-top">
+              <span className="task-label">{taskLabels[taskType] || taskType || 'Specialist assessment'}</span>
+              <span className="confidence"><Gauge size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} /> {confidencePercent}%</span>
+            </div>
+            {queryText && (
+              <div className="query-echo">
+                <User size={15} />
+                <div>
+                  <span>Your inquiry</span>
+                  <p>{queryText}</p>
+                </div>
+              </div>
+            )}
+            <div className="response-note">
+              <ShieldCheck size={13} />
+              <span>{confidenceLabel || 'Confidence is calibrated from routing and model certainty.'}</span>
+            </div>
+            {trace && <TraceViewer trace={trace} />}
+          </div>
+        )}
       </article>
     );
   }
