@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Bot, Check, Copy, Gauge, ShieldCheck, User } from 'lucide-react';
@@ -12,7 +12,46 @@ const taskLabels = {
   single_image_vqa: 'Remote sensing visual Q&A',
 };
 
-export default function ResponseCard({ responseData, queryText }) {
+function TypingAnswer({ answer, animate }) {
+  const [visibleLength, setVisibleLength] = useState(animate ? 0 : answer.length);
+
+  useEffect(() => {
+    if (!animate || !answer) {
+      setVisibleLength(answer?.length || 0);
+      return undefined;
+    }
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setVisibleLength(answer.length);
+      return undefined;
+    }
+
+    setVisibleLength(0);
+    let currentLength = 0;
+    const increment = Math.max(1, Math.ceil(answer.length / 110));
+    const timer = window.setInterval(() => {
+      currentLength = Math.min(answer.length, currentLength + increment);
+      setVisibleLength(currentLength);
+      if (currentLength >= answer.length) window.clearInterval(timer);
+    }, 22);
+
+    return () => window.clearInterval(timer);
+  }, [answer, animate]);
+
+  const isComplete = visibleLength >= answer.length;
+  if (!animate || isComplete) {
+    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>;
+  }
+
+  return (
+    <span className="typing-text">
+      {answer.slice(0, visibleLength)}
+      <span className="typing-caret" aria-hidden="true" />
+    </span>
+  );
+}
+
+export default function ResponseCard({ responseData, queryText, answerOnly = false, animate = false }) {
   const [copied, setCopied] = useState(false);
   if (!responseData) return null;
 
@@ -28,6 +67,18 @@ export default function ResponseCard({ responseData, queryText }) {
       setCopied(false);
     }
   };
+
+  if (answerOnly) {
+    return (
+      <article className="response-card response-card-answer-only">
+        <div className="response-body">
+          <div className="prose-sat">
+            <TypingAnswer answer={answer || ''} animate={animate} />
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article className="response-card">
@@ -54,7 +105,7 @@ export default function ResponseCard({ responseData, queryText }) {
       <div className="response-body">
         <div className="response-body-heading"><Bot size={15} /> Specialist assessment</div>
         <div className="prose-sat">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+           <TypingAnswer answer={answer || ''} animate={animate} />
         </div>
         <div className="response-note">
           <ShieldCheck size={13} />

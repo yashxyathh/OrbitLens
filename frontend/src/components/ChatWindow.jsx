@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronDown, Loader2, Network, Send, Trash2 } from 'lucide-react';
 import ResponseCard from './ResponseCard';
 
@@ -16,15 +16,17 @@ export default function ChatWindow({
   onOpenPipeline,
 }) {
   const resultsRef = useRef(null);
+  const [showAnalysisLog, setShowAnalysisLog] = useState(false);
+  const latestItem = history[history.length - 1];
 
   useEffect(() => {
-    if (history.length && resultsRef.current) {
+    if (history.length && showAnalysisLog && resultsRef.current) {
       resultsRef.current.scrollTo({ top: resultsRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [history, isLoading]);
+  }, [history, isLoading, showAnalysisLog]);
 
   const focusAnalysisLog = () => {
-    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setShowAnalysisLog((isVisible) => !isVisible);
   };
 
   const handleKeyDown = (event) => {
@@ -39,16 +41,27 @@ export default function ChatWindow({
       <div className="chat-history-scroll" ref={resultsRef}>
         {isLoading && (
           <div className="loading-card">
-            <Loader2 size={22} className="loading-orbit" />
+            <Loader2 size={18} className="loading-orbit" />
             <div>
-              <strong>Reading the scene</strong>
-              <p>Validating tensors · routing specialist · assembling evidence</p>
+              <strong>Thinking<span className="thinking-dots" aria-hidden="true">...</span></strong>
+              <p>OrbitLens is preparing your answer</p>
             </div>
           </div>
         )}
 
-        {history.length > 0 && (
-          <section className="results" aria-live="polite">
+        {latestItem && (
+          <section className="latest-answer" aria-live="polite" aria-label="Latest answer">
+            <ResponseCard
+              key={`${latestItem.query}-latest`}
+              responseData={latestItem.response}
+              answerOnly
+              animate
+            />
+          </section>
+        )}
+
+        {showAnalysisLog && history.length > 0 && (
+          <section className="results" id="analysis-log" aria-live="polite">
             <div className="results-heading">
               <h3>Analysis log</h3>
               <div className="results-heading-actions">
@@ -104,7 +117,14 @@ export default function ChatWindow({
             <button type="button" className="tool-button" onClick={onOpenPipeline}>
               <Network size={13} /> Pipeline
             </button>
-            <button type="button" className="tool-button" onClick={focusAnalysisLog} disabled={!history.length}>
+            <button
+              type="button"
+              className={`tool-button ${showAnalysisLog ? 'is-active' : ''}`}
+              onClick={focusAnalysisLog}
+              disabled={!history.length}
+              aria-expanded={showAnalysisLog}
+              aria-controls="analysis-log"
+            >
               <span className="tool-button-count">{history.length || '—'}</span> Analysis log
             </button>
             <label className="effort-control">
