@@ -11,7 +11,7 @@ export default function Header({ backendHealth, onOpenArchitecture }) {
         <div className="brand">
           <div className="brand-mark" aria-hidden="true"><Satellite size={18} /></div>
           <div className="brand-copy">
-            <span className="brand-name">SatQuery AI</span>
+            <span className="brand-name">OrbitLens</span>
             <span className="brand-sub">Earth observation / 01</span>
           </div>
         </div>
