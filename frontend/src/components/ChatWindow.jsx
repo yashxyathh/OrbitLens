@@ -35,7 +35,36 @@ export default function ChatWindow({
   };
 
   return (
-    <div>
+    <div className="chat-window">
+      <div className="chat-history-scroll" ref={resultsRef}>
+        {isLoading && (
+          <div className="loading-card">
+            <Loader2 size={22} className="loading-orbit" />
+            <div>
+              <strong>Reading the scene</strong>
+              <p>Validating tensors · routing specialist · assembling evidence</p>
+            </div>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <section className="results" aria-live="polite">
+            <div className="results-heading">
+              <h3>Analysis log</h3>
+              <div className="results-heading-actions">
+                <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
+                <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+            {history.map((item, index) => (
+              <ResponseCard key={`${item.query}-${index}`} responseData={item.response} queryText={item.query} imagePreviews={item.imagePreviews} />
+            ))}
+          </section>
+        )}
+      </div>
+
       <section className="composer">
         <div className="composer-heading">
           <div>
@@ -64,7 +93,7 @@ export default function ChatWindow({
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
             className="query-input"
-            rows={4}
+            rows={2}
             disabled={isLoading || !imagesCount}
             placeholder={imagesCount
               ? 'Ask about change, location, objects, land cover, or sensor signals…'
@@ -97,33 +126,6 @@ export default function ChatWindow({
           {!imagesCount && <span className="helper-warning">Image input required</span>}
         </div>
       </section>
-
-      {isLoading && (
-        <div className="loading-card">
-          <Loader2 size={22} className="loading-orbit" />
-          <div>
-            <strong>Reading the scene</strong>
-            <p>Validating tensors · routing specialist · assembling evidence</p>
-          </div>
-        </div>
-      )}
-
-      {history.length > 0 && (
-        <section className="results" aria-live="polite" ref={resultsRef}>
-          <div className="results-heading">
-            <h3>Analysis log</h3>
-            <div className="results-heading-actions">
-              <span>{history.length} {history.length === 1 ? 'inquiry' : 'inquiries'}</span>
-              <button type="button" className="clear-history" onClick={onClearHistory} disabled={isLoading} aria-label="Clear analysis history">
-                <Trash2 size={13} />
-              </button>
-            </div>
-          </div>
-          {history.map((item, index) => (
-            <ResponseCard key={`${item.query}-${index}`} responseData={item.response} queryText={item.query} imagePreviews={item.imagePreviews} />
-          ))}
-        </section>
-      )}
     </div>
   );
 }

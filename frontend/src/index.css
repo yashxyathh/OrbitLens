@@ -41,7 +41,7 @@ button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 
 .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
-.app-main { width: min(1400px, 100%); margin: 0 auto; padding: 0 40px 70px; flex: 1; }
+.app-main { width: min(1400px, 100%); margin: 0 auto; padding: 0 40px 220px; flex: 1; }
 
 .topbar {
   height: 78px; background: var(--ink); color: var(--cream); display: flex;
@@ -155,27 +155,69 @@ button:disabled { cursor: not-allowed; }
 .aside-quote p { font-family: 'Anthropic Serif', Georgia, serif; font-size: 20px; line-height: 1.08; margin: 10px 0 17px; }
 .aside-quote small { color: #77715c; font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
 
-.composer { margin-top: 18px; padding: 20px; }
-.composer-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
-.composer-heading h3 { font-size: 18px; letter-spacing: -.04em; margin: 0; }
+.chat-window { position: relative; min-width: 0; }
+.chat-history-scroll {
+  max-height: min(650px, calc(100vh - 285px));
+  overflow-y: auto;
+  padding: 4px 12px 175px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.28) transparent;
+}
+.chat-history-scroll::-webkit-scrollbar { width: 5px; }
+.chat-history-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-history-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 999px; }
+.composer {
+  position: fixed;
+  z-index: 45;
+  left: 50%;
+  bottom: 23px;
+  width: min(820px, calc(100vw - 48px));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 13px 14px 10px;
+  border: 1px solid rgba(0,0,0,.22);
+  border-radius: 30px;
+  background: rgba(246,239,210,.78);
+  box-shadow: 0 18px 50px rgba(0,0,0,.2), 0 3px 10px rgba(0,0,0,.12);
+  backdrop-filter: blur(20px) saturate(1.12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+}
+.composer::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,.3), transparent 42%);
+  pointer-events: none;
+}
+.composer-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 0 7px 9px; }
+.composer-heading h3 { font-size: 14px; letter-spacing: -.04em; margin: 3px 0 0; }
 .composer-label { color: var(--red); font-size: 10px; font-family: "JetBrains Mono", monospace; }
-.suggested-wrap { margin-bottom: 14px; }
+.suggested-wrap { margin: 0 7px 9px; }
 .suggested-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; display: block; margin-bottom: 8px; }
 .suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
-.suggestion { background: var(--khaki); color: #3e3b30; border: 1px solid transparent; padding: 8px 10px; font-size: 10px; line-height: 1.2; text-align: left; transition: .2s ease; }
+.suggestion { border-radius: 999px; background: rgba(226,221,180,.58); color: #3e3b30; border: 1px solid rgba(0,0,0,.1); padding: 7px 10px; font-size: 10px; line-height: 1.2; text-align: left; transition: .2s ease; }
 .suggestion:hover { border-color: var(--red); color: var(--red-dark); }
 .query-form { position: relative; }
-.query-input { display: block; width: 100%; min-height: 132px; resize: vertical; background: #fffaf0; border: 1px solid #bcb59a; color: var(--ink); padding: 15px 15px 53px; outline: 0; font-size: 14px; line-height: 1.5; transition: .2s ease; }
+.query-input { display: block; width: 100%; height: 82px; min-height: 0; max-height: 150px; resize: none; border-radius: 21px; background: rgba(255,250,240,.68); border: 1px solid rgba(0,0,0,.18); color: var(--ink); padding: 14px 17px 48px; outline: 0; font-size: 13px; line-height: 1.45; transition: .2s ease; }
 .query-input::placeholder { color: #9a947e; }
-.query-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(228,54,54,.1); }
+.query-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(228,54,54,.1), inset 0 0 18px rgba(255,255,255,.22); }
 .query-input:disabled { opacity: .55; }
-.query-actions { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.query-actions { position: absolute; left: 11px; right: 11px; bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.tool-button, .effort-control { display: inline-flex; align-items: center; gap: 5px; border: 0; color: var(--muted); background: transparent; padding: 7px 8px; font-size: 10px; white-space: nowrap; }
+.tool-button:hover { color: var(--ink); }
+.tool-button:disabled { opacity: .45; }
+.tool-button-count { display: inline-grid; place-items: center; min-width: 15px; height: 15px; border: 1px solid currentColor; border-radius: 50%; font: 8px "JetBrains Mono", monospace; }
+.effort-control { margin-left: auto; padding-right: 3px; }
+.effort-control span { color: var(--muted); }
+.effort-control select { appearance: none; border: 0; background: transparent; color: var(--ink); outline: 0; padding: 0 0 0 2px; font-size: 10px; cursor: pointer; }
 .clear-history { display: grid; place-items: center; width: 32px; height: 32px; background: var(--khaki); color: #504c3c; border: 0; }
 .clear-history:hover { color: var(--red); }
-.primary-button { display: inline-flex; align-items: center; gap: 8px; background: var(--red); color: var(--cream); padding: 9px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; transition: .2s ease; }
+.primary-button { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--red); color: var(--cream); padding: 9px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; transition: .2s ease; }
 .primary-button:hover { background: var(--red-dark); }
 .primary-button:disabled { opacity: .45; }
-.composer-helper { display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font-size: 10px; margin-top: 9px; }
+.composer-helper { display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font-size: 9px; margin: 6px 8px 0; }
 .composer-helper kbd { border: 1px solid #bdb69a; padding: 2px 4px; font-family: inherit; }
 .helper-warning { color: var(--red-dark); }
 
@@ -189,6 +231,7 @@ button:disabled { cursor: not-allowed; }
 .results-heading { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
 .results-heading h3 { font-size: 18px; letter-spacing: -.04em; margin: 0; }
 .results-heading span { color: var(--muted); font-size: 10px; }
+.results-heading-actions { display: flex; align-items: center; gap: 10px; }
 .response-card { padding: 22px; }
 .response-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
 .task-label { color: var(--red); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 800; }
@@ -266,6 +309,7 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 700px) {
   .topbar { height: 67px; }
   .topbar-inner, .app-main { padding-left: 16px; padding-right: 16px; }
+  .app-main { padding-bottom: 205px; }
   .brand-sub, .system-status { display: none; }
   .brand-copy { display: block; }
   .brand-name { font-size: 17px; }
@@ -283,6 +327,15 @@ button:disabled { cursor: not-allowed; }
   .panel-header { flex-direction: column; gap: 8px; }
   .workspace-aside { grid-template-columns: 1fr; }
   .aside-quote { grid-column: auto; }
+  .chat-history-scroll { max-height: calc(100vh - 245px); padding-right: 0; padding-bottom: 160px; }
+  .composer { bottom: 12px; width: calc(100vw - 24px); padding: 11px 10px 9px; border-radius: 24px; }
+  .composer-heading { margin-left: 6px; margin-right: 6px; }
+  .composer-heading h3 { font-size: 13px; }
+  .composer-label { font-size: 9px; }
+  .suggested-wrap { margin-left: 6px; margin-right: 6px; }
+  .query-actions { left: 8px; right: 8px; gap: 2px; }
+  .tool-button, .effort-control { padding-left: 5px; padding-right: 5px; }
+  .primary-button { padding-left: 11px; padding-right: 11px; }
   .composer-helper { flex-direction: column; }
   .response-top { flex-direction: column; }
   .trace-meta { grid-template-columns: 1fr; }
